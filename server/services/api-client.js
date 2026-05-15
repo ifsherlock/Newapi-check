@@ -2,13 +2,21 @@ import logger from '../utils/logger.js';
 
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
 
-function buildHeaders(token, extraHeaders = {}) {
+function buildHeaders(token, baseUrl, extraHeaders = {}) {
   const headers = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
     'User-Agent': DEFAULT_UA,
     'Accept': 'application/json',
   };
+  // Add Referer header - many new-api sites validate this
+  if (baseUrl) {
+    const normalized = normalizeBaseUrl(baseUrl);
+    headers['Referer'] = normalized + '/';
+    try {
+      headers['Origin'] = new URL(normalized).origin;
+    } catch { /* ignore */ }
+  }
   for (const [key, value] of Object.entries(extraHeaders || {})) {
     if (value === undefined || value === null || value === '') continue;
     headers[key] = String(value);
@@ -46,7 +54,8 @@ export async function fetchUserInfo(baseUrl, token, extraHeaders) {
   const url = `${normalizeBaseUrl(baseUrl)}/api/user/self`;
   const res = await fetch(url, {
     method: 'GET',
-    headers: buildHeaders(token, extraHeaders),
+    headers: buildHeaders(token, baseUrl, extraHeaders),
+    redirect: 'follow',
   });
 
   if (!res.ok) {
@@ -88,7 +97,8 @@ export async function performDirectCheckin(baseUrl, token, checkinPath = '/api/u
 
   const res = await fetch(apiUrl, {
     method: 'POST',
-    headers: buildHeaders(token, extraHeaders),
+    headers: buildHeaders(token, baseUrl, extraHeaders),
+    redirect: 'follow',
   });
 
   const text = await res.text();
@@ -128,7 +138,8 @@ export async function fetchCheckinStatus(baseUrl, token, checkinPath = '/api/use
 
   const res = await fetch(apiUrl, {
     method: 'GET',
-    headers: buildHeaders(token, extraHeaders),
+    headers: buildHeaders(token, baseUrl, extraHeaders),
+    redirect: 'follow',
   });
 
   if (!res.ok) {
@@ -147,8 +158,10 @@ export async function testConnection(baseUrl, token, extraHeaders) {
   try {
     const res = await fetch(`${normalizeBaseUrl(baseUrl)}/api/user/self`, {
       method: 'GET',
-      headers: buildHeaders(token, extraHeaders),
-      redirect: 'manual',
+      headers: buildHeaders(token, baseUrl, extraHeaders),
+      // Follow redirects! Many sites redirect HTTP→HTTPS or normalize paths.
+      // Using 'manual' here was causing 301/302 to be treated as failures.
+      redirect: 'follow',
     });
 
     const text = await res.text().catch(() => '');

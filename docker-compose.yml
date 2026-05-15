@@ -9,7 +9,9 @@ services:
       - "3211:3211"
     volumes:
       - ./data:/app/data
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - NODE_ENV=production
       - PORT=3211
+      - TZ=Asia/Shanghai
       # - ENCRYPT_KEY=your-custom-key-here

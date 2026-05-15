@@ -80,17 +80,19 @@ export default function AddAccountModal({ account, onClose, onSave }) {
                 onChange={e => set('session_token', e.target.value)}
                 required={!account}
               />
-              <input
-                className="glass-input"
-                placeholder="New-Api-User (可选)"
-                value={form.new_api_user}
-                onChange={e => set('new_api_user', e.target.value)}
-              />
-              <div className="text-xs text-gray-400 dark:text-gray-400">
-                部分站点需要该值，来自请求头 New-Api-User（可在 Network → /api/user/self → Request Headers 中查看）
-              </div>
             </>
           )}
+
+          {/* New-Api-User field - shown for ALL login types */}
+          <input
+            className="glass-input"
+            placeholder="New-Api-User (可选，用户ID)"
+            value={form.new_api_user}
+            onChange={e => set('new_api_user', e.target.value)}
+          />
+          <div className="text-xs text-gray-400 dark:text-gray-400">
+            部分站点需要该值才能正常签到。可在浏览器 Network → /api/user/self → Request Headers 中查看 New-Api-User 的值
+          </div>
 
           {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
 
