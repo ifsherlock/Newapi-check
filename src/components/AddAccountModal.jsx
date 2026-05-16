@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 
-const empty = { name: '', base_url: '', login_type: 'password', username: '', password: '', session_token: '', new_api_user: '', quota_unit: '' };
+const empty = { name: '', base_url: '', login_type: 'password', username: '', password: '', session_token: '', new_api_user: '', quota_unit: '', checkin_mode: 'auto' };
 
 export default function AddAccountModal({ account, onClose, onSave }) {
   const [form, setForm] = useState(account ? { ...empty, ...account, password: '', session_token: '' } : { ...empty });
@@ -25,7 +25,7 @@ export default function AddAccountModal({ account, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-panel p-6 w-full max-w-md space-y-4" onClick={e => e.stopPropagation()}>
+      <div className="glass-panel p-6 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{account ? '编辑账号' : '添加账号'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
@@ -36,15 +36,6 @@ export default function AddAccountModal({ account, onClose, onSave }) {
           <input className="glass-input" placeholder="站点地址 (https://...)" value={form.base_url} onChange={e => set('base_url', e.target.value)} required />
           <div className="text-xs text-gray-400 dark:text-gray-400">
             建议填写域名根地址，例如 https://example.com（不要包含 /console 等路径）
-          </div>
-          <input
-            className="glass-input"
-            placeholder="余额单位系数 (可选，例如 500000)"
-            value={form.quota_unit}
-            onChange={e => set('quota_unit', e.target.value)}
-          />
-          <div className="text-xs text-gray-400 dark:text-gray-400">
-            若余额显示过大，可填 500000（该站点 $232.62 对应 116,310,000）
           </div>
 
           <select className="glass-select" value={form.login_type} onChange={e => set('login_type', e.target.value)}>
@@ -91,7 +82,34 @@ export default function AddAccountModal({ account, onClose, onSave }) {
             onChange={e => set('new_api_user', e.target.value)}
           />
           <div className="text-xs text-gray-400 dark:text-gray-400">
-            部分站点需要该值才能正常签到。可在浏览器 Network → /api/user/self → Request Headers 中查看 New-Api-User 的值
+            部分站点需要该值才能正常签到。可在浏览器 Network → /api/user/self → Request Headers 中查看
+          </div>
+
+          {/* Checkin Mode - per account */}
+          <div className="pt-2 border-t border-gray-200/50 dark:border-gray-600/30">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 block">签到模式</label>
+            <select className="glass-select" value={form.checkin_mode || 'auto'} onChange={e => set('checkin_mode', e.target.value)}>
+              <option value="auto">自动（先API后浏览器）</option>
+              <option value="api">仅直接 API</option>
+              <option value="browser">仅浏览器模式</option>
+              <option value="browser_turnstile">浏览器 + Turnstile 绕过</option>
+            </select>
+            <div className="text-xs text-gray-400 dark:text-gray-400 mt-1">
+              自动：先尝试直接 API 签到，失败后回退浏览器<br/>
+              仅 API：只用直接 API 请求签到<br/>
+              浏览器：使用 Puppeteer 模拟浏览器签到<br/>
+              浏览器 + Turnstile：加载绕过扩展，自动处理 Cloudflare Turnstile 验证
+            </div>
+          </div>
+
+          <input
+            className="glass-input"
+            placeholder="余额单位系数 (可选，例如 500000)"
+            value={form.quota_unit}
+            onChange={e => set('quota_unit', e.target.value)}
+          />
+          <div className="text-xs text-gray-400 dark:text-gray-400">
+            若余额显示过大，可填 500000
           </div>
 
           {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}

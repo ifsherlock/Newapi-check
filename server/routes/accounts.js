@@ -89,6 +89,7 @@ router.get('/', (req, res) => {
            last_error_message, last_error_at,
            new_api_user,
            quota_unit,
+           checkin_mode,
            quota, used_quota, balance_updated_at,
            created_at
     FROM accounts
@@ -104,6 +105,7 @@ router.get('/:id', (req, res) => {
            last_error_message, last_error_at,
            new_api_user,
            quota_unit,
+           checkin_mode,
            quota, used_quota, balance_updated_at,
            created_at
     FROM accounts
@@ -118,10 +120,10 @@ router.post('/', (req, res) => {
   const validationError = validateCreatePayload(payload);
   if (validationError) return res.status(400).json({ error: validationError });
 
-  const { name, base_url, login_type = 'password', username, password, session_token, new_api_user, quota_unit } = payload;
+  const { name, base_url, login_type = 'password', username, password, session_token, new_api_user, quota_unit, checkin_mode } = payload;
   const stmt = db.prepare(`
-    INSERT INTO accounts (name, base_url, login_type, username, password_encrypted, session_token, new_api_user, quota_unit)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO accounts (name, base_url, login_type, username, password_encrypted, session_token, new_api_user, quota_unit, checkin_mode)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const result = stmt.run(
     String(name).trim(),
@@ -133,7 +135,8 @@ router.post('/', (req, res) => {
     new_api_user ? String(new_api_user).trim() : null,
     quota_unit !== undefined && quota_unit !== null && String(quota_unit).trim() !== ''
       ? Number(quota_unit)
-      : null
+      : null,
+    checkin_mode ? String(checkin_mode).trim() : 'auto'
   );
 
   res.json({ id: result.lastInsertRowid, message: 'Account created' });
@@ -259,6 +262,9 @@ router.put('/:id', (req, res) => {
   const nextNewApiUser = payload.new_api_user !== undefined
     ? (String(payload.new_api_user).trim() || null)
     : account.new_api_user;
+  const nextCheckinMode = payload.checkin_mode !== undefined
+    ? (String(payload.checkin_mode).trim() || 'auto')
+    : (account.checkin_mode || 'auto');
   const nextQuotaUnit = payload.quota_unit !== undefined
     ? (String(payload.quota_unit).trim() === '' ? null : Number(payload.quota_unit))
     : account.quota_unit;
@@ -267,7 +273,7 @@ router.put('/:id', (req, res) => {
     UPDATE accounts
     SET name = ?, base_url = ?, login_type = ?, username = ?,
         password_encrypted = ?, session_token = ?, enabled = ?,
-        new_api_user = ?, quota_unit = ?,
+        new_api_user = ?, quota_unit = ?, checkin_mode = ?,
         updated_at = datetime('now','localtime')
     WHERE id = ?
   `).run(
@@ -280,6 +286,7 @@ router.put('/:id', (req, res) => {
     nextEnabled,
     nextNewApiUser,
     nextQuotaUnit,
+    nextCheckinMode,
     req.params.id
   );
 

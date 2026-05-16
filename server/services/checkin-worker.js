@@ -1,4 +1,4 @@
-import { launchBrowser, createPage, closeBrowser } from './puppeteer.js';
+import { launchBrowser, createPage, closeBrowser, solveTurnstile } from './puppeteer.js';
 import { decrypt } from './crypto.js';
 import {
   testConnection as directTestConnection,
@@ -369,6 +369,10 @@ async function loginWithPassword(page, account, timeoutMs) {
 
   // Check for Cloudflare before interacting
   await waitForCloudflareBypass(page, Math.min(timeoutMs, 30000));
+    // Attempt Turnstile bypass if extension is loaded
+    if (typeof useTurnstileBypass !== 'undefined' && useTurnstileBypass) {
+      await solveTurnstile(page, 15000);
+    }
 
   await page.waitForSelector('input', { timeout: Math.min(timeoutMs, 15000) });
 
@@ -397,6 +401,10 @@ async function loginWithPassword(page, account, timeoutMs) {
 
   // Wait for any Turnstile to resolve before submitting
   await waitForCloudflareBypass(page, Math.min(timeoutMs, 30000));
+    // Attempt Turnstile bypass if extension is loaded
+    if (typeof useTurnstileBypass !== 'undefined' && useTurnstileBypass) {
+      await solveTurnstile(page, 15000);
+    }
 
   const submitBtn = await page.$('button[type="submit"], button.btn-primary, button:not([type="button"])');
   if (!submitBtn) {
@@ -430,6 +438,10 @@ async function loginWithSession(page, account, timeoutMs, tokenOverride) {
 
   // Check for Cloudflare before setting session
   await waitForCloudflareBypass(page, Math.min(timeoutMs, 30000));
+    // Attempt Turnstile bypass if extension is loaded
+    if (typeof useTurnstileBypass !== 'undefined' && useTurnstileBypass) {
+      await solveTurnstile(page, 15000);
+    }
 
   const cookieNames = new Set(['session', 'token']);
   if (parsedToken.cookieName) cookieNames.add(parsedToken.cookieName);
@@ -683,6 +695,8 @@ export async function testAccountConnection(account) {
   }
 
   // Fallback: browser-based test
+  const checkinMode = account.checkin_mode || 'auto';
+  const useTurnstileBypass = checkinMode === 'browser_turnstile';
   const timeoutMs = getNumberSetting('browser_timeout_seconds', 60) * 1000;
   const headless = getSetting('browser_headless', '1') === '1' ? 'new' : false;
   const sessionToken = account.login_type === 'session' && account.session_token
@@ -690,7 +704,7 @@ export async function testAccountConnection(account) {
     : null;
 
   try {
-    const browser = await launchBrowser({ headless });
+    const browser = await launchBrowser({ headless, turnstile: useTurnstileBypass });
     const page = await createPage(browser, { timeoutMs });
 
     if (account.login_type === 'session') {
@@ -724,8 +738,14 @@ export async function checkinAccount(account) {
   const token = getDecryptedToken(account);
   const extraHeaders = buildExtraHeaders(account);
 
-  // Strategy: try direct API first for accounts with a token
-  if (token) {
+  // Determine checkin mode for this account
+  const checkinMode = account.checkin_mode || 'auto';
+  const skipApi = checkinMode === 'browser' || checkinMode === 'browser_turnstile';
+  const skipBrowser = checkinMode === 'api';
+  const useTurnstileBypass = checkinMode === 'browser_turnstile';
+
+  // Strategy: try direct API first for accounts with a token (unless mode is browser-only)
+  if (token && !skipApi) {
     logger.info(`Trying direct API checkin for ${account.name}...`);
 
     // Query quota before checkin
@@ -798,6 +818,11 @@ export async function checkinAccount(account) {
   }
 
   // Fallback: browser-based checkin
+  if (skipBrowser) {
+    const message = lastResult?.message || '直接 API 签到失败，当前模式不允许浏览器回退';
+    logCheckin(account.id, 'failed', message);
+    return { success: false, message };
+  }
   const timeoutMs = getNumberSetting('browser_timeout_seconds', 60) * 1000;
   const headless = getSetting('browser_headless', '1') === '1' ? 'new' : false;
   const sessionToken = account.login_type === 'session' && account.session_token

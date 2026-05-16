@@ -56,6 +56,7 @@ const migrations = [
   { col: 'last_error_at', sql: `ALTER TABLE accounts ADD COLUMN last_error_at TEXT` },
   { col: 'new_api_user', sql: `ALTER TABLE accounts ADD COLUMN new_api_user TEXT` },
   { col: 'quota_unit', sql: `ALTER TABLE accounts ADD COLUMN quota_unit REAL` },
+  { col: 'checkin_mode', sql: `ALTER TABLE accounts ADD COLUMN checkin_mode TEXT DEFAULT 'auto'` },
 ];
 
 for (const m of migrations) {
