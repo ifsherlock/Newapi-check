@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PlayCircle, Users, CheckCircle, XCircle, DollarSign, RefreshCw, CheckSquare, Square, X } from 'lucide-react';
+import { PlayCircle, Users, CheckCircle, XCircle, DollarSign, RefreshCw, CheckSquare, Square, X, Zap } from 'lucide-react';
 import { useAccounts } from '../hooks/useAccounts';
 import { useCheckin } from '../hooks/useCheckin';
 import AccountCard from '../components/AccountCard';
@@ -12,6 +12,16 @@ function formatQuota(value) {
   if (num >= 1000000) return `$${(num / 1000000).toFixed(2)}M`;
   if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
   return `$${num.toFixed(2)}`;
+}
+
+function formatTokens(value) {
+  if (value == null) return '0';
+  const num = Number(value);
+  if (Number.isNaN(num)) return '0';
+  if (num >= 1000000000) return `${(num / 1000000000).toFixed(2)}B`;
+  if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+  return `${Math.round(num)}`;
 }
 
 export default function Dashboard() {
@@ -144,12 +154,21 @@ export default function Dashboard() {
   const totalUsedQuota = dashboard?.totalUsedQuota ?? 0;
   const totalRemaining = totalQuota - totalUsedQuota;
 
+  // Calculate total tokens consumed across all accounts
+  const totalTokensConsumed = accounts.reduce((sum, a) => {
+    if (a.used_quota == null) return sum;
+    const usedQuota = Number(a.used_quota) || 0;
+    const unit = Number(a.quota_unit) || 1;
+    return sum + (usedQuota * unit);
+  }, 0);
+
   const stats = [
     { label: '总账号', value: dashboard?.totalAccounts || 0, icon: Users, color: 'text-sky-600 dark:text-sky-400' },
     { label: '已启用', value: dashboard?.enabledAccounts || 0, icon: Users, color: 'text-cyan-600 dark:text-cyan-400' },
     { label: '今日成功', value: dashboard?.todaySuccess || 0, icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400' },
     { label: '今日失败', value: dashboard?.todayFailed || 0, icon: XCircle, color: 'text-red-500 dark:text-red-400' },
     { label: '总余额', value: formatQuota(totalRemaining), icon: DollarSign, color: totalRemaining > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' },
+    { label: '总 Tokens 消耗', value: formatTokens(totalTokensConsumed), icon: Zap, color: 'text-violet-600 dark:text-violet-400' },
   ];
 
   return (
@@ -190,7 +209,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {stats.map((s, index) => (
           <div
             key={s.label}

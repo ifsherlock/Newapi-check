@@ -1,4 +1,4 @@
-import { Play, Pencil, Trash2, Power, Wifi, RefreshCw } from 'lucide-react';
+import { Play, Pencil, Trash2, Power, Wifi, RefreshCw, Zap } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 function formatQuota(value) {
@@ -8,6 +8,16 @@ function formatQuota(value) {
   if (num >= 1000000) return `$${(num / 1000000).toFixed(2)}M`;
   if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
   return `$${num.toFixed(2)}`;
+}
+
+function formatTokens(value) {
+  if (value == null) return '--';
+  const num = Number(value);
+  if (Number.isNaN(num)) return '--';
+  if (num >= 1000000000) return `${(num / 1000000000).toFixed(2)}B`;
+  if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+  return `${Math.round(num)}`;
 }
 
 function quotaColor(quota, usedQuota) {
@@ -39,6 +49,12 @@ export default function AccountCard({
   const remaining = account.quota != null && account.used_quota != null
     ? Number(account.quota) - Number(account.used_quota)
     : null;
+
+  // Calculate tokens consumed for this account
+  const usedQuota = Number(account.used_quota) || 0;
+  const quotaUnit = Number(account.quota_unit) || 1;
+  const tokensConsumed = account.used_quota != null ? usedQuota * quotaUnit : null;
+  const totalTokens = account.quota != null ? Number(account.quota) * quotaUnit : null;
 
   return (
     <div
@@ -126,6 +142,27 @@ export default function AccountCard({
           </button>
         )}
       </div>
+
+      {/* Tokens Section */}
+      {tokensConsumed != null && (
+        <>
+          <div className="glass-divider"></div>
+          <div className="flex items-center gap-2">
+            <Zap size={14} className="text-violet-500 dark:text-violet-400" />
+            <div className="text-sm text-gray-600/80 dark:text-gray-300 font-medium">
+              Tokens 消耗:
+              <span className="ml-1.5 font-bold text-violet-600 dark:text-violet-400">
+                {formatTokens(tokensConsumed)}
+              </span>
+            </div>
+          </div>
+          {totalTokens != null && (
+            <div className="text-xs text-gray-400 dark:text-gray-400 ml-5">
+              总额 {formatTokens(totalTokens)} / 已用 {formatTokens(tokensConsumed)} / 剩余 {formatTokens(totalTokens - tokensConsumed)}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Actions */}
       {!selectMode && (

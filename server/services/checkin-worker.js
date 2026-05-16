@@ -173,6 +173,15 @@ function isNotFoundLikeMessage(message) {
     || text.includes('405');
 }
 
+function isAlreadyCheckedInMessage(message) {
+  const text = String(message || '').toLowerCase();
+  return text.includes('已签到')
+    || text.includes('already checked')
+    || text.includes('今日已签到')
+    || text.includes('已经签到')
+    || text.includes('重复签到');
+}
+
 function getDecryptedToken(account) {
   if (account.login_type === 'session' && account.session_token) {
     return normalizeBearerToken(decrypt(account.session_token));
@@ -766,14 +775,16 @@ export async function checkinAccount(account) {
           break;
         }
 
-        logCheckin(account.id, 'failed', message, quotaBeforeStr, null);
+        const checkinStatus = isAlreadyCheckedInMessage(message) ? 'checked' : 'failed';
+        logCheckin(account.id, checkinStatus, message, quotaBeforeStr, null);
         logger.info(`Direct API checkin failed for ${account.name}: ${message}`);
         return { success: false, message };
       }
 
       if (lastResult && lastResult.isNotFound) {
         const message = lastResult.message || '未找到可用的签到接口';
-        logCheckin(account.id, 'failed', message, quotaBeforeStr, null);
+        const checkinStatus = isAlreadyCheckedInMessage(message) ? 'checked' : 'failed';
+        logCheckin(account.id, checkinStatus, message, quotaBeforeStr, null);
         logger.info(`Direct API checkin failed for ${account.name}: ${message}`);
         return { success: false, message };
       }
@@ -832,11 +843,13 @@ export async function checkinAccount(account) {
     const success = result?.success !== false && !result?.error;
     const message = result?.message || JSON.stringify(result);
 
-    logCheckin(account.id, success ? 'success' : 'failed', message);
+    const browserStatus = success ? 'success' : (isAlreadyCheckedInMessage(message) ? 'checked' : 'failed');
+    logCheckin(account.id, browserStatus, message);
     logger.info(`Browser checkin ${success ? 'success' : 'failed'} for ${account.name}: ${message}`);
     return { success, message };
   } catch (err) {
-    logCheckin(account.id, 'failed', err.message);
+    const errStatus = isAlreadyCheckedInMessage(err.message) ? 'checked' : 'failed';
+    logCheckin(account.id, errStatus, err.message);
     logger.error(`Checkin error for ${account.name}: ${err.message}`);
     return { success: false, message: err.message };
   } finally {

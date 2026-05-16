@@ -18,6 +18,10 @@ export async function launchBrowser(options = {}) {
       '--disable-dev-shm-usage',
       '--disable-gpu',
       '--disable-extensions',
+      '--disable-software-rasterizer',
+      '--ozone-platform=headless',
+      '--single-process',
+      '--no-zygote',
       '--window-size=1280,800',
     ],
   });
