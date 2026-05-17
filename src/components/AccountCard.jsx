@@ -74,8 +74,16 @@ export default function AccountCard({
             />
           )}
           <div className="space-y-1">
-            <h3 className="font-semibold text-gray-800 dark:text-white text-base tracking-tight">
-              {account.name}
+            <h3 className="text-base tracking-tight">
+              <a
+                href={`${account.base_url?.replace(/\/$/, '')}/console`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="font-bold text-lg bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400 bg-clip-text text-transparent hover:from-sky-500 hover:to-purple-500 dark:hover:from-sky-300 dark:hover:to-purple-300 transition-all duration-300 hover:scale-[1.02] inline-block"
+              >
+                {account.name}
+              </a>
             </h3>
             <p className="text-xs text-gray-500/80 dark:text-gray-300 truncate max-w-[200px] font-medium">
               {account.base_url}
