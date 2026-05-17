@@ -74,13 +74,14 @@ export default function AccountCard({
             />
           )}
           <div className="space-y-1">
-            <h3 className="text-base tracking-tight">
+            <h3 className="tracking-tight">
               <a
                 href={`${account.base_url?.replace(/\/$/, '')}/console`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="font-bold text-lg bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400 bg-clip-text text-transparent hover:from-sky-500 hover:to-purple-500 dark:hover:from-sky-300 dark:hover:to-purple-300 transition-all duration-300 hover:scale-[1.02] inline-block"
+                className="font-extrabold text-xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400 bg-clip-text text-transparent hover:from-pink-500 hover:via-orange-500 hover:to-yellow-500 dark:hover:from-pink-400 dark:hover:via-orange-400 dark:hover:to-yellow-400 transition-all duration-300 hover:scale-105 inline-block drop-shadow-sm"
+                style={{ WebkitTextStroke: '0.5px rgba(139, 92, 246, 0.3)', textShadow: '0 1px 2px rgba(139, 92, 246, 0.2), 0 0 8px rgba(236, 72, 153, 0.15)' }}
               >
                 {account.name}
               </a>
