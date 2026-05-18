@@ -14,8 +14,11 @@ export default function Navbar() {
 
   return (
     <nav className="glass-panel px-6 py-3 flex items-center gap-8 sticky top-4 z-50 mx-4">
-      <div className="text-lg font-bold bg-gradient-to-r from-sky-600 to-cyan-500 dark:from-sky-400 dark:to-cyan-400 bg-clip-text text-transparent">
-        New-API 签到
+      <div className="flex items-center gap-2.5">
+        <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-sm" />
+        <span className="text-lg font-bold bg-gradient-to-r from-[#a8ff78] to-[#78ffd6] bg-clip-text text-transparent">
+          New-API 签到
+        </span>
       </div>
       <div className="flex gap-1 flex-1">
         {links.map(({ to, icon: Icon, label }) => (
