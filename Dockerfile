@@ -9,16 +9,25 @@ RUN npm run build && rm -rf node_modules && npm ci --omit=dev
 # ---
 FROM node:20-slim
 
-# Minimal deps for externally-mounted Chromium (it bundles its own libs)
-# Only need fonts + a few essentials the bundled chrome still links against
+# Runtime libs required by externally-mounted Chromium
 RUN apt-get update && apt-get install -y \
     fonts-wqy-zenhei \
     libnss3 \
     libatk-bridge2.0-0 \
+    libcups2 \
     libdrm2 \
     libgbm1 \
     libxkbcommon0 \
     libasound2 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libx11-xcb1 \
+    libxss1 \
+    libxfixes3 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
