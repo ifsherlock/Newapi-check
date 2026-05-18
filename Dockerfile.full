@@ -1,7 +1,8 @@
 FROM node:20-slim
 
-# Install only Chromium runtime dependencies (Chromium itself is mounted from host)
+# Install Chromium and all dependencies (self-contained, no external browser needed)
 RUN apt-get update && apt-get install -y \
+    chromium \
     fonts-noto-cjk \
     dbus \
     libx11-xcb1 \
@@ -20,9 +21,9 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Chromium is volume-mounted; skip bundled download
+# Use bundled Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/opt/browser/chrome
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 

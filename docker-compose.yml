@@ -1,17 +1,17 @@
-version: '3.8'
-
 services:
   newapi-checkin:
-    build: .
+    image: ghcr.io/ifsherlock/newapi-checkin:full
     container_name: newapi-checkin
     restart: unless-stopped
     ports:
       - "3211:3211"
     volumes:
       - ./data:/app/data
-      - /etc/localtime:/etc/localtime:ro
+      # Mount external Chromium browser (shared with other containers)
+      - /path/to/your/chromium:/opt/browser:ro
     environment:
       - NODE_ENV=production
       - PORT=3211
       - TZ=Asia/Shanghai
+      - PUPPETEER_EXECUTABLE_PATH=/opt/browser/chrome
       # - ENCRYPT_KEY=your-custom-key-here
