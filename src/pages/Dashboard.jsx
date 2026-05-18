@@ -39,6 +39,16 @@ export default function Dashboard() {
     fetchDashboard().then(setDashboard).catch((e) => setError(e.message || '加载仪表盘失败'));
   }, [fetchDashboard]);
 
+  // Auto-refresh balance on page load
+  useEffect(() => {
+    if (accounts.length > 0) {
+      refreshAllBalance()
+        .then(() => fetchDashboard().then(setDashboard))
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accounts.length]);
+
   const handleCheckinOne = async (id) => {
     try {
       await checkinOne(id);

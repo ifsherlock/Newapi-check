@@ -1,48 +1,43 @@
+FROM node:20-slim AS builder
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build && rm -rf node_modules && npm ci --omit=dev
+
+# ---
 FROM node:20-slim
 
-# Install Chromium and all dependencies (self-contained, no external browser needed)
+# Install Chromium + runtime deps (self-contained)
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-noto-cjk \
-    dbus \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
     libgbm1 \
     libasound2 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxss1 \
-    libgtk-3-0 \
-    libnss3 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Use bundled Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/public ./public
 
-# Install dev dependencies for build, then build, then clean up
-COPY . .
-RUN npm ci && npm run build && npm prune --omit=dev
-
-# Create data directory
 RUN mkdir -p /app/data/logs
 
 ENV NODE_ENV=production
 ENV PORT=3211
 
 EXPOSE 3211
-
 VOLUME ["/app/data"]
 
 CMD ["node", "server/index.js"]
