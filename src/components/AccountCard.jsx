@@ -80,8 +80,7 @@ export default function AccountCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="font-extrabold text-xl bg-clip-text text-transparent hover:scale-105 inline-block transition-all duration-300 drop-shadow-sm"
-                style={{ backgroundImage: 'linear-gradient(to right, #a8ff78, #78ffd6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', WebkitTextStroke: '0.3px rgba(120, 255, 214, 0.4)', textShadow: '0 1px 3px rgba(168, 255, 120, 0.25), 0 0 10px rgba(120, 255, 214, 0.15)' }}
+                className="font-bold text-lg bg-gradient-to-r from-sky-600 to-cyan-500 dark:from-sky-400 dark:to-cyan-400 bg-clip-text text-transparent hover:opacity-80 inline-block transition-all duration-200"
               >
                 {account.name}
               </a>

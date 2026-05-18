@@ -21,8 +21,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Chromium is volume-mounted; skip bundled download
+# The app auto-discovers chrome in /opt/browser/chromium-*/chrome
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/opt/browser/chrome
 
 WORKDIR /app
 
